@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LAMAR Smart Catalog</title>
+<style>
+body{font-family:Arial,sans-serif;margin:0;background:#f6f3ec;color:#173b32}
+header{padding:14px 18px;background:#173b32;color:white;display:flex;justify-content:space-between;align-items:center}
+main{max-width:1000px;margin:auto;padding:20px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+button,input{padding:10px 12px;border:1px solid #ddd;border-radius:10px}
+button{cursor:pointer}.primary{background:#173b32;color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.card{background:#fff;border-radius:16px;padding:14px;border:1px solid #e5dfd4}
+.card img{width:100%;height:170px;object-fit:cover;border-radius:12px;background:#eee}
+.price{font-size:20px;font-weight:bold}.muted{color:#6d756f}
+#admin{display:none;background:#fff;border:1px solid #ddd;border-radius:16px;padding:16px;margin-top:18px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:600px){.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+<div><b>LAMAR Smart Catalog</b><div style="font-size:12px">دار لمار</div></div>
+<button onclick="toggleAdmin()">Admin</button>
+</header>
+
+<main>
+<h1>ماذا تشتهي اليوم؟</h1>
+<p class="muted">اكتب ما تحب أو ميزانيتك وسأقترح الأنسب من المنتجات المتوفرة.</p>
+
+<div class="toolbar">
+<input id="search" placeholder="ابحث عن منتج..." oninput="render()">
+<button onclick="setCategory('الكل')">الكل</button>
+<button onclick="setCategory('المكسرات')">المكسرات</button>
+<button onclick="setCategory('الحلويات')">الحلويات</button>
+<button onclick="setCategory('الهدايا')">الهدايا</button>
+</div>
+
+<div id="products" class="grid"></div>
+
+<section id="admin">
+<h2>لوحة الإدارة</h2>
+<div class="row">
+<input id="name" placeholder="اسم المنتج">
+<input id="category" placeholder="القسم">
+<input id="price" type="number" placeholder="السعر">
+<input id="image" placeholder="رابط الصورة">
+</div>
+<textarea id="desc" placeholder="الوصف" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid #ddd"></textarea>
+<div style="margin-top:10px">
+<button class="primary" onclick="addProduct()">إضافة منتج</button>
+<button onclick="resetData()">إرجاع البيانات التجريبية</button>
+</div>
+</section>
+</main>
+
+<script>
+const seed=[
+{id:1,name:"فستق عنتاب فاخر",category:"المكسرات",price:325,desc:"محمص بخفة وملوحة متوازنة",image:"https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&w=800&q=80"},
+{id:2,name:"مكسرات لمار المشكلة",category:"المكسرات",price:275,desc:"لوز وكاجو وبندق وفستق",image:"https://images.unsplash.com/photo-1598373182133-52452f7691ef?auto=format&fit=crop&w=800&q=80"},
+{id:3,name:"بقلاوة بالفستق",category:"الحلويات",price:390,desc:"طبقات هشة وحشوة فستق غنية",image:"https://images.unsplash.com/photo-1519671282429-b44660ead0a7?auto=format&fit=crop&w=800&q=80"}
+];
+let products=JSON.parse(localStorage.getItem("lamar_catalog_products")||"null")||seed;
+let current="الكل";
+
+function render(){
+ const q=document.getElementById("search").value.trim().toLowerCase();
+ const box=document.getElementById("products");
+ box.innerHTML="";
+ products.filter(p=>(current==="الكل"||p.category===current)&&(!q||(p.name+" "+p.desc+" "+p.category).toLowerCase().includes(q)))
+ .forEach(p=>{
+  const el=document.createElement("article");
+  el.className="card";
+  el.innerHTML=`<img src="${p.image}" alt="${p.name}">
+  <h3>${p.name}</h3><p class="muted">${p.desc}</p>
+  <div class="price">${p.price} TRY</div>
+  <button class="primary" onclick="order('${p.name}',${p.price})">إضافة للسلة</button>`;
+  box.appendChild(el);
+ });
+}
+function setCategory(c){current=c;render()}
+function toggleAdmin(){document.getElementById("admin").style.display=document.getElementById("admin").style.display==="block"?"none":"block"}
+function addProduct(){
+ const p={id:Date.now(),name:name.value||"منتج جديد",category:category.value||"أخرى",price:+price.value||0,desc:desc.value||"",image:image.value||"https://via.placeholder.com/600x400?text=LAMAR"};
+ products.push(p); localStorage.setItem("lamar_catalog_products",JSON.stringify(products)); render();
+}
+function resetData(){products=seed;localStorage.setItem("lamar_catalog_products",JSON.stringify(products));render()}
+function order(name,price){
+ const msg=encodeURIComponent(`طلب من LAMAR Smart Catalog\n${name}\nالسعر: ${price} TRY`);
+ window.open("https://wa.me/?text="+msg,"_blank");
+}
+render();
+</script>
+</body>
+</html>
